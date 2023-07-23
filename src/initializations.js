@@ -16,31 +16,21 @@ export function initializationVertices () {
 
 export function initializationIndices () {
   const indices = [];
-  for (let i = 0; i < SIZE_CLOTH; i++) {
-    if (i % 2 === 0) {
-      let j = 0; 
-      while (j < SIZE_CLOTH) {
-        indices.push(i * SIZE_CLOTH + j);
-        j++;
-      }
-    } else {
-      let j = SIZE_CLOTH - 1; 
-      while (j >= 0) {
-        indices.push(i * SIZE_CLOTH + j);
-        j--;
-      }
+  const limit = SIZE_CLOTH - 1;
+  for (let i = 0; i < limit; i++) {
+    const from = i * SIZE_CLOTH;
+    const to = from + SIZE_CLOTH;
+    
+    for (let j = 0; j < limit; j++) {
+      indices.push(j + from, j + to);
+      indices.push(j + from, j + 1 + to);
+      indices.push(j + from, j + 1 + from);
     }
   }
-  
-  for (let k = 0; k < SIZE_CLOTH - 1; k++) {
-    const startIndex = SIZE_CLOTH * k;
-    const endIndex = 1 + SIZE_CLOTH + startIndex;
-    for (let i = 0; i < SIZE_CLOTH - 1; i++){
-      indices.push(i + startIndex, i + endIndex);
-    }
-  }
-  for (let i = 0; i < SIZE_CLOTH; i++) {
-    indices.push(SIZE_CLOTH - 1, i);
+  const lastIndex = SIZE_CLOTH * limit;
+  for (let i = 0; i < limit; i++) {
+    indices.push(lastIndex + i, lastIndex + i + 1);
+    indices.push(limit + SIZE_CLOTH * i, limit + SIZE_CLOTH * (i + 1));
   }
   return indices;
 }
@@ -51,9 +41,11 @@ export function getLinks () {
     const from = i * SIZE_CLOTH;
     const to = from + SIZE_CLOTH;
     for (let j = 0; j < SIZE_CLOTH - 1; j++) {
-      links.push(new Links(j + from, j + to));
-      links.push(new Links(j + from, j + 1 + to));
-      links.push(new Links(j + from, j + 1 + from));
+      const distance = 1 / STEP;
+      const gipDistance = Math.sqrt(2 * distance * distance);
+      links.push(new Links(j + from, j + to, distance));
+      links.push(new Links(j + from, j + 1 + to, gipDistance));
+      links.push(new Links(j + from, j + 1 + from, distance));
     }
   }
   return links;
@@ -61,4 +53,15 @@ export function getLinks () {
 
 export function initializationGravity() {
   return new Array(SIZE_CLOTH * 3).fill(GRAVITY);
+}
+
+export function initializationAttached() {
+  return [
+    0,
+    SIZE_CLOTH - 1,
+    SIZE_CLOTH * (SIZE_CLOTH - 1),
+    SIZE_CLOTH * SIZE_CLOTH - 1,
+    Math.floor(SIZE_CLOTH * Math.floor(SIZE_CLOTH / 2) + SIZE_CLOTH / 2),
+  ];
+
 }

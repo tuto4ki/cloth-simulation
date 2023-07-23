@@ -18,7 +18,7 @@ export default function drawScene(gl, positionLocation, indexBuffer, positionBuf
   const zNear = 1;
   const zFar = 2000;
   const projectionMatrix = m4.perspective(20 * Math.PI / 180, aspect, zNear, zFar);
-  const radius = 2;
+  const radius = 1.5;
   
   // Вычисление матрицы камеры
   let cameraMatrix = m4.multiply(m4.xRotation(150 * Math.PI / 180), m4.yRotation(-30 * Math.PI / 180));
@@ -38,7 +38,7 @@ export default function drawScene(gl, positionLocation, indexBuffer, positionBuf
   
   gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
   // отрисовка примитивов - линий
-  gl.drawElements(gl.LINE_STRIP, indexBuffer.numberOfItems, gl.UNSIGNED_SHORT, 0);
+  gl.drawElements(gl.LINES, indexBuffer.numberOfItems, gl.UNSIGNED_SHORT, 0);
 
   //
   //gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
