@@ -4,21 +4,64 @@ import {
   LOOP_ALGORITHM,
   PERIOD,
   AMPLITUDE,
+  SIZE_CLOTH,
+  STEP,
 } from './constants.js';
-import {
-  getLinks,
-  initializationAttached,
-  initializationVertices,
-} from './initializations.js';
+import Point from './point.js';
+import Links from './links.js';
 
 export class SimulationVerlet {
   constructor(isGravity) {
     this.isGravity = isGravity;
-    this.vertices = initializationVertices();
-    this.verticesPrev = initializationVertices();
-    this.links = getLinks();
-    this.attachedVertices = initializationAttached();
+    this.vertices = [];
+    this.verticesPrev = [];
+    this.initializationVertices();
+    this.links = [];
+    this.getLinks();
+    this.attachedVertices = this.initializationAttached();
     this.indexFixed = this.attachedVertices[this.attachedVertices.length - 1];
+  }
+
+  initializationVertices () {
+    for (let i = 0; i < SIZE_CLOTH; i++) {
+      const x = (i + 1) * 1 / STEP;
+      for (let j = 0; j < SIZE_CLOTH; j++) {
+        const z = (j + 1) * 1 / STEP;
+        const id = this.vertices.length;
+        this.vertices.push(new Point(x, 0, z, id));
+        this.verticesPrev.push(new Point(x, 0, z, id));
+      }
+    }
+  }
+
+  getLinks () {
+    const limit = SIZE_CLOTH - 1;
+    const distance = 1 / STEP;
+    const gipDistance = Math.sqrt(2 * distance * distance);
+    for (let i = 0; i < limit; i++) {
+      const from = i * SIZE_CLOTH;
+      const to = from + SIZE_CLOTH;
+      for (let j = 0; j < limit; j++) {
+        this.links.push(new Links(j + from, j + to, distance));
+        this.links.push(new Links(j + from, j + 1 + to, gipDistance));
+        this.links.push(new Links(j + from, j + 1 + from, distance));
+      }
+    }
+    const lastIndex = SIZE_CLOTH * limit;
+    for (let i = 0; i < limit; i++) {
+      this.links.push(new Links(lastIndex + i, lastIndex + i + 1, distance));
+      this.links.push(new Links(limit + SIZE_CLOTH * i, limit + SIZE_CLOTH * (i + 1), distance));
+    }
+  }
+
+  initializationAttached() {
+    return [
+      0,
+      SIZE_CLOTH - 1,
+      SIZE_CLOTH * (SIZE_CLOTH - 1),
+      SIZE_CLOTH * SIZE_CLOTH - 1,
+      Math.floor(SIZE_CLOTH * Math.floor(SIZE_CLOTH / 2) + SIZE_CLOTH / 2),
+    ];
   }
 
   animationFrame(time = 0) {
@@ -43,25 +86,7 @@ export class SimulationVerlet {
       }
     }
   }
-  /*
-  particleSystemVerlet(timeStep) {
-    const f = this.isGravity && GRAVITY * timeStep * timeStep;
-    const limit = this.vertices.length - 2;
-    for (let i = 0; i < limit; i += 3) {
-      if (!this.attachedVertices.includes(i / 3)) {
-        const tempX = this.vertices[i];
-        const tempY = this.vertices[i + 1];
-        const tempZ = this.vertices[i + 2];
-        this.vertices[i] += this.vertices[i] - this.verticesPrev[i];
-        this.vertices[i + 1] += this.vertices[i + 1] - this.verticesPrev[i + 1] + f;
-        this.vertices[i + 2] += this.vertices[i + 2] - this.verticesPrev[i + 2];
-        this.verticesPrev[i] = tempX;
-        this.verticesPrev[i + 1] = tempY;
-        this.verticesPrev[i + 2] = tempZ;
-      }
-    }
-  }
-*/
+
   setGravitation(isGravity) {
     this.isGravity = isGravity;
   }

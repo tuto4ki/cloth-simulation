@@ -4,11 +4,7 @@ import { degToRad } from './common/utils.js';
 import { createProgram } from './common/utilsWG.js';
 import clothSimulationFragment from './shader/clothSimulationFragment.js';
 import clothSimulationVertex from './shader/clothSimulationVertex.js';
-import {
-  initializationIndices,
-  initializationColor,
-  initializationVerticesDraw,
-} from './initializations.js';
+import { STEP, SIZE_CLOTH } from './constants.js';
 
 export class Draw {
 
@@ -21,9 +17,9 @@ export class Draw {
     this.matrixLocation = this.gl.getUniformLocation(program, 'u_matrix');
     this.colorLocation = this.gl.getAttribLocation(program, 'a_color');
   
-    this.verticesDraw = initializationVerticesDraw();
-    this.color = initializationColor();
-    this.indices = initializationIndices();
+    this.verticesDraw = this.initializationVerticesDraw();
+    this.color = this.initializationColor();
+    this.indices = this.initializationIndices();
 
     this.positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
@@ -36,6 +32,27 @@ export class Draw {
     this.colorBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.color), this.gl.STATIC_DRAW);
+  }
+
+  initializationVerticesDraw () {
+    const length = this.getSize();
+    return new Array(length * 3);
+  }
+  
+  initializationIndices () {
+    const length = this.getSize();
+    return new Array(length);
+  }
+
+  initializationColor() {
+    const size = SIZE_CLOTH - 1;
+    const length = size * size * 6 + size * 4;
+    return new Array(length).fill(.0);
+  }
+  
+  getSize() {
+    const size = SIZE_CLOTH - 1;
+    return size * size * 6 + size * 4;
   }
 
   drawScene() {
@@ -97,39 +114,6 @@ export class Draw {
       this.color[i] = Math.abs(min - this.color[i]) / period;
     }
   }
-/*
-  updateColor(vertices, links) {
-    let max = 0;
-    let min = 0;
-    let distance = 0;
-    for (let i = 0, index = 0, j = 0; i < links.length; i++) {
-      distance = links[i].getDiffDistance(vertices);
-      max = Math.max(max, distance);
-      min = Math.min(min, distance);
-  
-      const indexFrom = links[i].p1 * 3;
-      this.verticesDraw[index] = vertices[indexFrom];
-      this.verticesDraw[index + 1] = vertices[indexFrom + 1];
-      this.verticesDraw[index + 2] = vertices[indexFrom + 2];
-      this.indices[j] = j;
-      this.color[j] = distance;
-      index += 3;
-      j++;
-    
-      const indexTo = links[i].p2 * 3;
-      this.verticesDraw[index] = vertices[indexTo];
-      this.verticesDraw[index + 1] = vertices[indexTo + 1];
-      this.verticesDraw[index + 2] = vertices[indexTo + 2];
-      this.indices[j] = j;
-      this.color[j] = distance;
-      index += 3;
-      j++;
-    }
-    const period = (max - min);
-    for (let i = 0; i < this.color.length; i++) {
-      this.color[i] = Math.abs(min - this.color[i]) / period;
-    }
-  }*/
 }
 
 function getMatrixView(aspect) {

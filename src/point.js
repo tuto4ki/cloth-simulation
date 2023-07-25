@@ -3,10 +3,14 @@ export default class Point {
     this.x = x;
     this.y = y;
     this.z = z;
-    //this.verticesIndices = [];
     this.id = id;
   }
-  addVertices(index) {
-    this.verticesIndices.push(index);
+
+  getDistance(pointTo) {
+    const dx = this.x - pointTo.x;
+    const dy = this.y - pointTo.y;
+    const dz = this.z - pointTo.z;
+    const deltaLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    return { dx, dy, dz, deltaLength };
   }
 }
