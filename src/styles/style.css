@@ -7,9 +7,15 @@
   width: 100vw;
   height: 100vh;
   display: block;
-  /*width: 500px;
-  height: 500px;
-  margin: calc(50vh - 252px) calc(50vw - 250px);
-  border: 0;
-  */
+}
+.gravity {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  font-size: 1.4em;
+}
+.gravity input {
+  transform:scale(1.3);
 }
