@@ -1,5 +1,5 @@
-import { Draw } from './draw.js';
-import { SimulationVerlet } from './simulation.js';
+import Draw from './draw.js';
+import SimulationVerlet from './simulation.js';
 
 
 function main () {
@@ -20,9 +20,9 @@ function main () {
 
   animation();
 
-  function animation (time) {
+  function animation(time) {
     simulationVerlet.animationFrame(time);
-    draw.updateColor(simulationVerlet.vertices, simulationVerlet.links)
+    draw.updateColor(simulationVerlet.links);
     draw.drawScene();
     window.requestAnimationFrame(animation);
   }

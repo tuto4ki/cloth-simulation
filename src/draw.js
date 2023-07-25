@@ -1,13 +1,11 @@
 import { resizeCanvasToDisplaySize } from './common/utilsWG.js';
-import m4 from './common/matrix.js';
-import { degToRad } from './common/utils.js';
+import { getMatrixView } from './common/utils.js';
 import { createProgram } from './common/utilsWG.js';
 import clothSimulationFragment from './shader/clothSimulationFragment.js';
 import clothSimulationVertex from './shader/clothSimulationVertex.js';
-import { STEP, SIZE_CLOTH } from './constants.js';
+import { SIZE_CLOTH } from './constants.js';
 
-export class Draw {
-
+export default class Draw {
   constructor(gl) {
     this.gl = gl;
 
@@ -34,19 +32,18 @@ export class Draw {
     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.color), this.gl.STATIC_DRAW);
   }
 
-  initializationVerticesDraw () {
+  initializationVerticesDraw() {
     const length = this.getSize();
     return new Array(length * 3);
   }
   
-  initializationIndices () {
+  initializationIndices() {
     const length = this.getSize();
     return new Array(length);
   }
 
   initializationColor() {
-    const size = SIZE_CLOTH - 1;
-    const length = size * size * 6 + size * 4;
+    const length = this.getSize();
     return new Array(length).fill(.0);
   }
   
@@ -82,52 +79,31 @@ export class Draw {
     this.gl.drawElements(this.gl.LINES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
   }
 
-  updateColor(vertices, links) {
+  updateColor(links) {
     let max = 0;
     let min = 0;
     let distance = 0;
     for (let i = 0, index = 0, j = 0; i < links.length; i++) {
-      distance = links[i].getDiffDistance(vertices);
+      distance = links[i].getDiffDistance();
       max = Math.max(max, distance);
       min = Math.min(min, distance);
   
-      const indexFrom = links[i].p1;
-      this.verticesDraw[index] = vertices[indexFrom].x;
-      this.verticesDraw[index + 1] = vertices[indexFrom].y;
-      this.verticesDraw[index + 2] = vertices[indexFrom].z;
-      this.indices[j] = j;
-      this.color[j] = distance;
+      this.changePositionVertices(links[i].p1, index, j++, distance);
       index += 3;
-      j++;
-    
-      const indexTo = links[i].p2;
-      this.verticesDraw[index] = vertices[indexTo].x;
-      this.verticesDraw[index + 1] = vertices[indexTo].y;
-      this.verticesDraw[index + 2] = vertices[indexTo].z;
-      this.indices[j] = j;
-      this.color[j] = distance;
+      this.changePositionVertices(links[i].p2, index, j++, distance);
       index += 3;
-      j++;
     }
     const period = (max - min);
     for (let i = 0; i < this.color.length; i++) {
       this.color[i] = Math.abs(min - this.color[i]) / period;
     }
   }
-}
 
-function getMatrixView(aspect) {
-  const projectionMatrix = m4.perspective(degToRad(20), aspect, 1, 5);
-
-  const matrixRotationX = m4.xRotation(degToRad(150));
-  const matrixRotationY = m4.yRotation(degToRad(-30));
-  const matrixRotationZ = m4.zRotation(degToRad(-25));
-  let cameraMatrix = m4.multiply(matrixRotationX, matrixRotationY);
-  cameraMatrix = m4.multiply(cameraMatrix, matrixRotationZ);
-  cameraMatrix = m4.translate(cameraMatrix, 0, 0, 2.5);
-  const viewMatrix = m4.inverse(cameraMatrix);
-
-  const viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
-  const matrix = m4.translate(viewProjectionMatrix, 0, 0.2, 0);
-  return matrix;
+  changePositionVertices(point, index, j, distance) {
+    this.verticesDraw[index] = point.x;
+    this.verticesDraw[index + 1] = point.y;
+    this.verticesDraw[index + 2] = point.z;
+    this.indices[j] = j;
+    this.color[j] = distance;
+  }
 }

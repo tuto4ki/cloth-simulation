@@ -10,19 +10,19 @@ import {
 import Point from './point.js';
 import Links from './links.js';
 
-export class SimulationVerlet {
+export default class SimulationVerlet {
   constructor(isGravity) {
     this.isGravity = isGravity;
     this.vertices = [];
     this.verticesPrev = [];
     this.initializationVertices();
     this.links = [];
-    this.getLinks();
+    this.initializationLinks();
     this.attachedVertices = this.initializationAttached();
     this.indexFixed = this.attachedVertices[this.attachedVertices.length - 1];
   }
 
-  initializationVertices () {
+  initializationVertices() {
     for (let i = 0; i < SIZE_CLOTH; i++) {
       const x = (i + 1) * 1 / STEP;
       for (let j = 0; j < SIZE_CLOTH; j++) {
@@ -34,7 +34,7 @@ export class SimulationVerlet {
     }
   }
 
-  getLinks () {
+  initializationLinks() {
     const limit = SIZE_CLOTH - 1;
     const distance = 1 / STEP;
     const gipDistance = Math.sqrt(2 * distance * distance);
@@ -42,15 +42,39 @@ export class SimulationVerlet {
       const from = i * SIZE_CLOTH;
       const to = from + SIZE_CLOTH;
       for (let j = 0; j < limit; j++) {
-        this.links.push(new Links(j + from, j + to, distance));
-        this.links.push(new Links(j + from, j + 1 + to, gipDistance));
-        this.links.push(new Links(j + from, j + 1 + from, distance));
+        this.links.push(
+          new Links(
+            this.vertices[j + from],
+            this.vertices[j + to],
+            distance
+          ),
+          new Links(
+            this.vertices[j + from],
+            this.vertices[j + 1 + to],
+            gipDistance
+          ),
+          new Links(
+            this.vertices[j + from],
+            this.vertices[j + 1 + from],
+            distance
+          )
+        );
       }
     }
     const lastIndex = SIZE_CLOTH * limit;
     for (let i = 0; i < limit; i++) {
-      this.links.push(new Links(lastIndex + i, lastIndex + i + 1, distance));
-      this.links.push(new Links(limit + SIZE_CLOTH * i, limit + SIZE_CLOTH * (i + 1), distance));
+      this.links.push(
+        new Links(
+          this.vertices[lastIndex + i],
+          this.vertices[lastIndex + i + 1],
+          distance
+        ),
+        new Links(
+          this.vertices[limit + SIZE_CLOTH * i],
+          this.vertices[limit + SIZE_CLOTH * (i + 1)],
+          distance
+        )
+      );
     }
   }
 
@@ -94,7 +118,7 @@ export class SimulationVerlet {
   satisfyConstraints() {
     for (let i = 0; i < LOOP_ALGORITHM; i++) {
       for(let j = 0; j < this.links.length; j++) {
-        this.links[j].constraints(this.vertices, this.attachedVertices);
+        this.links[j].constraints(this.attachedVertices);
       }
     }
   }
