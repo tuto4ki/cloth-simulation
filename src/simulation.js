@@ -1,44 +1,76 @@
-import { GRAVITY, UPDATE_DELTA_TIME } from './constants.js';
+import {
+  GRAVITY,
+  UPDATE_DELTA_TIME,
+  LOOP_ALGORITHM,
+  PERIOD,
+  AMPLITUDE,
+} from './constants.js';
+import {
+  getLinks,
+  initializationAttached,
+  initializationVertices,
+} from './initializations.js';
 
-export default function animationFrame(attachedVertices) {
-  const index = attachedVertices[attachedVertices.length - 1] * 3 + 1;
-
-  return (fTimeStep, vertices, verticesPrev, links, attachedVertices, isGravity) => {
-    if (fTimeStep) {
-      vertices[index] = 0.09 * Math.sin(fTimeStep / 200);
-      const gravity = isGravity ? GRAVITY : 0;
-      ParticleSystemVerlet(vertices, verticesPrev, UPDATE_DELTA_TIME, attachedVertices, gravity);
-      
-      SatisfyConstraints(vertices, links, attachedVertices);
-    }
-    return { vertices, verticesPrev };
-  };
-}
-
-function ParticleSystemVerlet(vertices, verticesPrev, fTimeStep, attachedVertices, gravity) {
-  if (!fTimeStep) {
-    return;
+export class SimulationVerlet {
+  constructor(isGravity) {
+    this.isGravity = isGravity;
+    this.vertices = initializationVertices();
+    this.verticesPrev = initializationVertices();
+    this.links = getLinks();
+    this.attachedVertices = initializationAttached();
+    this.indexFixed = this.attachedVertices[this.attachedVertices.length - 1];
   }
-  const f = gravity * fTimeStep * fTimeStep;
-  for (let i = 0; i < vertices.length; i += 3) {
-    if (!attachedVertices.includes(i / 3)) {
-      const tempX = vertices[i];
-      const tempY = vertices[i + 1];
-      const tempZ = vertices[i + 2];
-      vertices[i] += vertices[i] - verticesPrev[i];
-      vertices[i + 1] += vertices[i + 1] - verticesPrev[i + 1] + f;
-      vertices[i + 2] += tempZ - verticesPrev[i + 2];
-      verticesPrev[i] = tempX;
-      verticesPrev[i + 1] = tempY;
-      verticesPrev[i + 2] = tempZ;
+
+  animationFrame(time = 0) {
+    this.vertices[this.indexFixed].y = AMPLITUDE * Math.sin(time / PERIOD);
+    this.particleSystemVerlet(UPDATE_DELTA_TIME);
+    this.satisfyConstraints();
+  }
+
+  particleSystemVerlet(timeStep) {
+    const f = this.isGravity && GRAVITY * timeStep * timeStep;
+    for (let i = 0; i < this.vertices.length; i++) {
+      if (!this.attachedVertices.includes(i)) {
+        const tempX = this.vertices[i].x;
+        const tempY = this.vertices[i].y;
+        const tempZ = this.vertices[i].z;
+        this.vertices[i].x += this.vertices[i].x - this.verticesPrev[i].x;
+        this.vertices[i].y += this.vertices[i].y - this.verticesPrev[i].y + f;
+        this.vertices[i].z += this.vertices[i].z - this.verticesPrev[i].z;
+        this.verticesPrev[i].x = tempX;
+        this.verticesPrev[i].y = tempY;
+        this.verticesPrev[i].z = tempZ;
+      }
     }
   }
-}
+  /*
+  particleSystemVerlet(timeStep) {
+    const f = this.isGravity && GRAVITY * timeStep * timeStep;
+    const limit = this.vertices.length - 2;
+    for (let i = 0; i < limit; i += 3) {
+      if (!this.attachedVertices.includes(i / 3)) {
+        const tempX = this.vertices[i];
+        const tempY = this.vertices[i + 1];
+        const tempZ = this.vertices[i + 2];
+        this.vertices[i] += this.vertices[i] - this.verticesPrev[i];
+        this.vertices[i + 1] += this.vertices[i + 1] - this.verticesPrev[i + 1] + f;
+        this.vertices[i + 2] += this.vertices[i + 2] - this.verticesPrev[i + 2];
+        this.verticesPrev[i] = tempX;
+        this.verticesPrev[i + 1] = tempY;
+        this.verticesPrev[i + 2] = tempZ;
+      }
+    }
+  }
+*/
+  setGravitation(isGravity) {
+    this.isGravity = isGravity;
+  }
 
-function SatisfyConstraints(vertices, links, attachedVertices) {
-  for (let i = 0; i < 20; i++) {
-    for(let j = 0; j < links.length; j++) {
-      vertices = links[j].constraints(vertices, attachedVertices);
+  satisfyConstraints() {
+    for (let i = 0; i < LOOP_ALGORITHM; i++) {
+      for(let j = 0; j < this.links.length; j++) {
+        this.links[j].constraints(this.vertices, this.attachedVertices);
+      }
     }
   }
 }

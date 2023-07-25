@@ -8,7 +8,9 @@ function initializationVertices () {
     const x = (i + 1) * 1 / STEP;
     for (let j = 0; j < SIZE_CLOTH; j++) {
       const z = (j + 1) * 1 / STEP;
-      vertices.push(x, 0, z);
+      //vertices.push(x, 0, z);
+      const id = vertices.length;
+      vertices.push(new Point(x, 0, z, id));
     }
   }
   return vertices;
